@@ -82,22 +82,22 @@ public:
 
     static void reloadUnit()
     {
-        qDebug() << Systemd::reloadUnit(QLatin1String("mysqld.service"), Systemd::Replace);
+        qDebug() << Systemd::reloadUnit(QLatin1String("mysqld.service"), Replace);
     }
 
     static void restartUnit()
     {
-        qDebug() << Systemd::restartUnit(QLatin1String("mysqld.service"), Systemd::Replace);
+        qDebug() << Systemd::restartUnit(QLatin1String("mysqld.service"), Replace);
     }
 
     static void startUnit()
     {
-        qDebug() << Systemd::startUnit(QLatin1String("mysqld.service"), Systemd::Replace);
+        qDebug() << Systemd::startUnit(QLatin1String("mysqld.service"), Replace);
     }
 
     static void stopUnit()
     {
-        qDebug() << Systemd::stopUnit(QLatin1String("mysqld.service"), Systemd::Replace);
+        qDebug() << Systemd::stopUnit(QLatin1String("mysqld.service"), Replace);
     }
 };
 

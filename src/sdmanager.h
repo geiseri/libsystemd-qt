@@ -23,7 +23,7 @@
 #include <QStringList>
 
 #include "QtSystemd-export.h"
-
+#include "systemd_types.h"
 #include "job.h"
 #include "unit.h"
 
@@ -36,28 +36,6 @@
  */
 namespace Systemd
 {
-    enum Mode {
-        Replace,
-        Fail,
-        Isolate,
-        IgnoreDependencies,
-        IgnoreRequirements
-    };
-
-    enum Result {
-        Done,
-        Canceled,
-        Timeout,
-        Failed,
-        Dependency,
-        Skipped
-    };
-
-    enum Who {
-        Main,
-        Control,
-        All
-    };
 
     class SDQT_EXPORT Notifier : public QObject
     {
@@ -72,7 +50,7 @@ namespace Systemd
         /*
          * Sent out each time a new job is dequeued.
          */
-        void jobRemoved(const QString &jobPath, const QString &unit, const Systemd::Result result);
+        void jobRemoved(const QString &jobPath, const QString &unit, const UnitResult result);
 
         /*
          * Sent out each time a new unit is loaded.
@@ -132,7 +110,7 @@ namespace Systemd
     /*
      * May be used to kill (i.e. send a signal to) all processes of a unit.
      */
-    SDQT_EXPORT void killUnit(const QString &name, const Systemd::Who who, const int signal);
+    SDQT_EXPORT void killUnit(const QString &name, const UnitKillWho who, const int signal);
 
     /*
      * Returns an array with all currently queued jobs.
@@ -163,7 +141,7 @@ namespace Systemd
      * startUnit(). Reloading is done only if the unit is already running and
      * fails otherwise.
      */
-    SDQT_EXPORT Job::Ptr reloadUnit(const QString &name, const Mode mode);
+    SDQT_EXPORT Job::Ptr reloadUnit(const QString &name, const UnitMode mode);
 
     /*
      * Is similar to reloadUnit() but will restart the unit. If a service is
@@ -171,19 +149,19 @@ namespace Systemd
      * flavor is used in which case a service that isn't running is not
      * affected by the restart.
      */
-    SDQT_EXPORT Job::Ptr restartUnit(const QString &name, const Mode mode);
+    SDQT_EXPORT Job::Ptr restartUnit(const QString &name, const UnitMode mode);
 
     /*
      * Enqeues a start job, and possibly depending jobs. Takes the unit to
      * activate, plus a mode string.
      */
-    SDQT_EXPORT Job::Ptr startUnit(const QString &name, const Mode mode);
+    SDQT_EXPORT Job::Ptr startUnit(const QString &name, const UnitMode mode);
 
     /*
      * Is similar to startUnit() but stops the specified unit rather than
      * starting it. Note that "isolate" mode is invalid for this call.
      */
-    SDQT_EXPORT Job::Ptr stopUnit(const QString &name, const Mode mode);
+    SDQT_EXPORT Job::Ptr stopUnit(const QString &name, const UnitMode mode);
 
     SDQT_EXPORT void resetFailedUnit(const QString &name);
 

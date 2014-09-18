@@ -97,6 +97,8 @@ public:
     QString unitFileState;
     QStringList wantedBy;
     QStringList wants;
+
+    void populateProperties();
 };
 }
 

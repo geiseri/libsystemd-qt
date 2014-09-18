@@ -24,6 +24,8 @@
 #include <QSharedPointer>
 
 #include "QtSystemd-export.h"
+#include "systemd_types.h"
+#include "job.h"
 
 namespace Systemd {
 
@@ -104,8 +106,21 @@ public:
     QStringList wantedBy() const;
     QStringList wants() const;
 
+    void kill(const UnitKillWho who, int killSignal);
+    Job::Ptr reload(const UnitMode mode);
+    Job::Ptr reloadOrRestart(const UnitMode mode);
+    Job::Ptr reloadOrTryRestart(const UnitMode mode);
+    void resetFailed();
+    Job::Ptr restart(const UnitMode mode);
+    Job::Ptr start(const UnitMode mode);
+    Job::Ptr stop(const UnitMode mode);
+    Job::Ptr tryRestart(const UnitMode mode);
+
 protected:
     UnitPrivate *d_ptr;
+
+private slots:
+    void populateProperties();
 
 };
 }

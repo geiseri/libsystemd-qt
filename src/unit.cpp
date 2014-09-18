@@ -19,9 +19,18 @@
 
 #include "unit_p.h"
 #include "sdmanager_p.h"
-
+#include "propertiesinterface.h"
 Systemd::UnitPrivate::UnitPrivate(const QString &path) :
     unitIface(Systemd::SystemdPrivate::SD_DBUS_SERVICE, path, QDBusConnection::systemBus())
+{    
+    populateProperties();
+}
+
+Systemd::UnitPrivate::~UnitPrivate()
+{
+}
+
+void Systemd::UnitPrivate::populateProperties()
 {
     activeEnterTimestamp = unitIface.activeEnterTimestamp();
     activeEnterTimestampMonotonic = unitIface.activeEnterTimestampMonotonic();
@@ -89,18 +98,18 @@ Systemd::UnitPrivate::UnitPrivate(const QString &path) :
     wants = unitIface.wants();
 }
 
-Systemd::UnitPrivate::~UnitPrivate()
-{
-}
-
 Systemd::Unit::Unit(const QString &path, QObject *parent) :
                     QObject(parent), d_ptr(new UnitPrivate(path))
 {
+    OrgFreedesktopDBusPropertiesInterface *props = new OrgFreedesktopDBusPropertiesInterface(d_ptr->unitIface.service(),path,d_ptr->unitIface.connection(),this);
+    connect(props,SIGNAL(PropertiesChanged(QString,QVariantMap,QStringList)),this,SLOT(populateProperties()));
 }
 
 Systemd::Unit::Unit(UnitPrivate &unit, QObject *parent) :
                     QObject(parent), d_ptr(&unit)
 {
+    OrgFreedesktopDBusPropertiesInterface *props = new OrgFreedesktopDBusPropertiesInterface(d_ptr->unitIface.service(),d_ptr->unitIface.path(),d_ptr->unitIface.connection(),this);
+    connect(props,SIGNAL(PropertiesChanged(QString,QVariantMap,QStringList)),this,SLOT(populateProperties()));
 }
 
 Systemd::Unit::~Unit()
@@ -478,4 +487,155 @@ QStringList Systemd::Unit::wants() const
 {
     Q_D(const Unit);
     return d->wants;
+}
+
+void Systemd::Unit::kill(const UnitKillWho who, int killSignal)
+{
+    Q_D(Unit);
+    d->unitIface.Kill(SystemdPrivate::whoToString(who),killSignal);
+}
+
+Systemd::Job::Ptr Systemd::Unit::reload(const UnitMode mode)
+{
+    Q_D(Unit);
+
+    Job::Ptr job;
+
+    QDBusPendingReply<QDBusObjectPath> reply = d->unitIface.Reload(SystemdPrivate::modeToString(mode));
+    reply.waitForFinished();
+
+    if (reply.isError()) {
+        qDebug() << reply.error().message();
+    } else if (! reply.reply().arguments().isEmpty()) {
+        QString jobPath = qdbus_cast<QDBusObjectPath>(reply.reply().arguments().first()).path();
+        job = Job::Ptr(new Job(jobPath), &QObject::deleteLater);
+    }
+
+    return job;
+}
+
+Systemd::Job::Ptr Systemd::Unit::reloadOrRestart(const UnitMode mode)
+{
+    Q_D(Unit);
+
+    Job::Ptr job;
+
+    QDBusPendingReply<QDBusObjectPath> reply = d->unitIface.ReloadOrRestart(SystemdPrivate::modeToString(mode));
+    reply.waitForFinished();
+
+    if (reply.isError()) {
+        qDebug() << reply.error().message();
+    } else if (! reply.reply().arguments().isEmpty()) {
+        QString jobPath = qdbus_cast<QDBusObjectPath>(reply.reply().arguments().first()).path();
+        job = Job::Ptr(new Job(jobPath), &QObject::deleteLater);
+    }
+
+    return job;
+}
+
+Systemd::Job::Ptr Systemd::Unit::reloadOrTryRestart(const UnitMode mode)
+{
+    Q_D(Unit);
+
+    Job::Ptr job;
+
+    QDBusPendingReply<QDBusObjectPath> reply = d->unitIface.ReloadOrTryRestart(SystemdPrivate::modeToString(mode));
+    reply.waitForFinished();
+
+    if (reply.isError()) {
+        qDebug() << reply.error().message();
+    } else if (! reply.reply().arguments().isEmpty()) {
+        QString jobPath = qdbus_cast<QDBusObjectPath>(reply.reply().arguments().first()).path();
+        job = Job::Ptr(new Job(jobPath), &QObject::deleteLater);
+    }
+
+    return job;
+}
+
+void Systemd::Unit::resetFailed()
+{
+    Q_D(Unit);
+    d->unitIface.ResetFailed();
+}
+
+Systemd::Job::Ptr Systemd::Unit::restart(const UnitMode mode)
+{
+    Q_D(Unit);
+
+    Job::Ptr job;
+
+    QDBusPendingReply<QDBusObjectPath> reply = d->unitIface.Restart(SystemdPrivate::modeToString(mode));
+    reply.waitForFinished();
+
+    if (reply.isError()) {
+        qDebug() << reply.error().message();
+    } else if (! reply.reply().arguments().isEmpty()) {
+        QString jobPath = qdbus_cast<QDBusObjectPath>(reply.reply().arguments().first()).path();
+        job = Job::Ptr(new Job(jobPath), &QObject::deleteLater);
+    }
+
+    return job;
+}
+
+Systemd::Job::Ptr Systemd::Unit::start(const UnitMode mode)
+{
+    Q_D(Unit);
+
+    Job::Ptr job;
+
+    QDBusPendingReply<QDBusObjectPath> reply = d->unitIface.Start(SystemdPrivate::modeToString(mode));
+    reply.waitForFinished();
+
+    if (reply.isError()) {
+        qDebug() << reply.error().message();
+    } else if (! reply.reply().arguments().isEmpty()) {
+        QString jobPath = qdbus_cast<QDBusObjectPath>(reply.reply().arguments().first()).path();
+        job = Job::Ptr(new Job(jobPath), &QObject::deleteLater);
+    }
+
+    return job;
+}
+
+Systemd::Job::Ptr Systemd::Unit::stop(const UnitMode mode)
+{
+    Q_D(Unit);
+
+    Job::Ptr job;
+
+    QDBusPendingReply<QDBusObjectPath> reply = d->unitIface.Stop(SystemdPrivate::modeToString(mode));
+    reply.waitForFinished();
+
+    if (reply.isError()) {
+        qDebug() << reply.error().message();
+    } else if (! reply.reply().arguments().isEmpty()) {
+        QString jobPath = qdbus_cast<QDBusObjectPath>(reply.reply().arguments().first()).path();
+        job = Job::Ptr(new Job(jobPath), &QObject::deleteLater);
+    }
+
+    return job;
+}
+
+Systemd::Job::Ptr Systemd::Unit::tryRestart(const UnitMode mode)
+{
+    Q_D(Unit);
+
+    Job::Ptr job;
+
+    QDBusPendingReply<QDBusObjectPath> reply = d->unitIface.TryRestart(SystemdPrivate::modeToString(mode));
+    reply.waitForFinished();
+
+    if (reply.isError()) {
+        qDebug() << reply.error().message();
+    } else if (! reply.reply().arguments().isEmpty()) {
+        QString jobPath = qdbus_cast<QDBusObjectPath>(reply.reply().arguments().first()).path();
+        job = Job::Ptr(new Job(jobPath), &QObject::deleteLater);
+    }
+
+    return job;
+}
+
+void Systemd::Unit::populateProperties()
+{
+    Q_D(Unit);
+    d->populateProperties();
 }
